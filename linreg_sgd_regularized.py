@@ -27,7 +27,7 @@ def regularization_func(theta1, p):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--lp", type=int, default=2)
-    parser.add_argument("--alpha", type=float, default=1e-5)
+    parser.add_argument("--lambda_", type=float, default=1e-5)
     parser.add_argument("--lr", type=float, default=0.1)
     parser.add_argument("--num_steps", type=int, default=5)
     args = parser.parse_args()
@@ -44,6 +44,7 @@ def main():
 
     # The plot: LHS is the data, RHS will be the cost function.
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10,6.15))
+    fig.suptitle(f"$L_{args.lp}$, $\\lambda$={args.lambda_}, lr={args.lr}")
     ax[0].scatter(x, y, marker='x', s=40, color='k')
     truth = ax[0].plot(x, hypothesis(x, theta1_true), alpha=0.5,
                lw=5, color='black', label=r'$\theta_1 = {:.3f}$'.format(theta1_true))
@@ -53,7 +54,7 @@ def main():
     theta1_grid = np.linspace(*ax1_xlim, 100)
     J_grid = cost_func(theta1_grid[:,np.newaxis], y, x)
     reg_grid = regularization_func(theta1_grid, args.lp)
-    combo_grid = J_grid + args.alpha * reg_grid
+    combo_grid = J_grid + args.lambda_ * reg_grid
 
     # The cost function as a function of its single parameter, theta1.
     ax[1].plot(theta1_grid, J_grid, color='blue', alpha=0.5, lw=1, label=r"$L_D(\theta, X, y)$", zorder=0.5)
@@ -63,21 +64,21 @@ def main():
     # Take num_steps steps with learning rate lr down the steepest gradient,
     # starting at theta1 = 0.
     theta1 = [-0.5]
-    J = [cost_func(theta1[0], y, x)[0] + args.alpha * regularization_func(theta1[0], args.lp)]
+    J = [cost_func(theta1[0], y, x)[0] + args.lambda_ * regularization_func(theta1[0], args.lp)]
     for j in range(args.num_steps - 1):
         last_theta1 = theta1[-1]
         this_theta1 = last_theta1 - args.lr / m * np.sum(
                                         (hypothesis(x, last_theta1) - y) * x)
-        if args.alpha > 0:
+        if args.lambda_ > 0:
             tmp_theta = this_theta1
             if args.lp == 2:
-                this_theta1 -= args.lr * 2 * args.alpha * last_theta1
+                this_theta1 -= args.lr * 2 * args.lambda_ * last_theta1
             elif args.lp == 1:
-                this_theta1 -= args.lr * args.alpha * np.sign(last_theta1)
+                this_theta1 -= args.lr * args.lambda_ * np.sign(last_theta1)
             # print(f"{tmp_theta} -> {this_theta1}")
 
         theta1.append(this_theta1)
-        J.append(cost_func(this_theta1, y, x)[0] + args.alpha * regularization_func(this_theta1, args.lp))
+        J.append(cost_func(this_theta1, y, x)[0] + args.lambda_ * regularization_func(this_theta1, args.lp))
 
     buffer = 0.01
     colors = ['g', 'y', 'aqua', 'c', 'DeepPink', 'orange'][:args.num_steps]
@@ -103,7 +104,7 @@ def main():
     # plt.show(block=False)
 
     count = 0
-    dir_ = f"a{args.alpha}_lp{args.lp}_lp{args.lr}"
+    dir_ = f"lmbda{args.lambda_}_lp{args.lp}_lr{args.lr}"
     if not os.path.isdir(dir_):
         os.mkdir(dir_)
     plt.savefig(f"{dir_}/{count}.png")
